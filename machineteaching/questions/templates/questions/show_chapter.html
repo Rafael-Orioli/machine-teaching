@@ -6,7 +6,7 @@
     <div class="card chapter-list">
       <h3 class="col-8">{% blocktrans %}Problems{% endblocktrans %}</h3>
       <div class="col-4">
-        {% if perms.questions.view_userlogview %}
+        {% if perms.questions.add_chapter %} <!--Professor-->
         <a class="link edit" onclick="edit()">{% blocktrans %}Edit{% endblocktrans %}</a>
         <a class="link cancel" onclick="cancel()" style="display: none;">{% blocktrans %}Cancel{% endblocktrans %}</a>
         <button class="primary save" onclick="save()" style="margin: 0 0 0.5rem 0.5rem; display: none;">{% blocktrans %}Save{% endblocktrans %}</button>
@@ -45,7 +45,7 @@
         {% endfor %}
         </tbody>
         </table>
-        {% if perms.questions.view_userlogview %}
+        {% if perms.questions.add_chapter %} <!--Professor-->
         <div class="col-12" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem">
             {% if messages %}
             {% for message in messages %}
