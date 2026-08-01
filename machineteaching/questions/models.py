@@ -97,6 +97,7 @@ class OnlineClass(models.Model):
     active = models.BooleanField(default=True)
     start_date = models.DateField(blank=True)
     history = HistoricalRecords()
+    monitors = models.ManyToManyField(settings.AUTH_USER_MODEL, through='Monitor')
 
     class Meta:
         verbose_name = _('OnlineClass')
@@ -147,6 +148,7 @@ class Professor(models.Model):
 class UserProfile(models.Model):
     PROGRAMMING = (("yes", "Yes"),
                    ("no", "No"))
+    # talvez precise alterar para ter versão maiúscula
     STRATEGIES = (("random", "random"),
                   ("eer", "eer"),
                   ("sequential", "sequential"))
@@ -175,6 +177,23 @@ class UserProfile(models.Model):
     class Meta:
         verbose_name = _('User profile')
         verbose_name_plural = _('User profiles')
+
+
+class Monitor(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    online_class = models.ForeignKey(OnlineClass, on_delete=models.CASCADE)
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return "%s - %s" % (self.user.first_name + ' ' + self.user.last_name, self.online_class.name)
+    
+    class Meta:
+        verbose_name = _('Monitor')
+        verbose_name_plural = _('Monitors')
+        constraints = [models.UniqueConstraint(
+                fields=['user', 'online_class', 'start_date'],
+                name='unique_monitor_combination')]
 
 
 class Cluster(models.Model):
@@ -523,6 +542,3 @@ def create_userlog_error(sender, instance, created, **kwargs):
             log_error.userlog = instance
             log_error.error = error
             log_error.save()
-
-
-
