@@ -89,7 +89,7 @@
             url: '{% url "saveaccess" %}',
             data: {
                 'page': 'Student solutions',
-                {% if perms.questions.view_userlogview %}
+                {% if perms.questions.view_userlogview %} //Monitor
                 'name': '{{user.username}}',
                 {% endif %}
                 'csrfmiddlewaretoken': '{{ csrf_token }}'
