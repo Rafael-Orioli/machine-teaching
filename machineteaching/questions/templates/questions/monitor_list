@@ -1,0 +1,17 @@
+{% extends "questions/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header card-header-secondary">
+            <h4 class="card-title">Monitors</h4>
+            <a href="{% url 'monitors/create' %}">Add more monitors</a>
+        </div>
+        <ul>
+            {% for monitor in monitors %}
+                <li class="card-body">{{ monitor.user }} | <a href="{% url 'monitors/update/<int:pk>' product.id %}">Edit</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock content %}
