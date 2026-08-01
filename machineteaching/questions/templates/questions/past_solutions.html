@@ -41,7 +41,7 @@
     
     {% endif %}
 
-    {% if log.problem.question_type == "C" and log.test_case_hits != None and perms.questions.view_userlogview %}
+    {% if log.problem.question_type == "C" and log.test_case_hits != None and perms.questions.view_userlogview %} <!--Monitor-->
     <div onClick="showHiddenTestCase()" class="card">
         <h3>{% blocktrans %}Hidden test cases{% endblocktrans %}</h3>
         <div style="display: flex; align-items: center;">
@@ -102,7 +102,7 @@
     </div>
 
 {% endif %}
-{% if comments and not perms.questions.view_userlogview %}
+{% if comments and not perms.questions.view_userlogview %} <!--Aluno-->
 <div class="card">
     <h3>{% blocktrans %}Comments{% endblocktrans %}</h3>
     <div>
@@ -114,7 +114,7 @@
 </div>
 {% endif %}
 
-{% if perms.questions.view_userlogview %}
+{% if perms.questions.view_userlogview %} <!--Monitor-->
 <div class="card">
     <h3>{% blocktrans %}Comments{% endblocktrans %}</h3>
     <div>
@@ -228,7 +228,7 @@
 
 </script>
 
-{% if perms.questions.view_userlogview %}
+{% if perms.questions.view_userlogview %} <!--Monitor-->
 <script src="../../static/js/hidden.js"></script>
 <script>
     //runhiddentests({{test_case|safe}}, '{{header}}', {{expected_results|safe}})
