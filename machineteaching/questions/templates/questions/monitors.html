@@ -1,0 +1,111 @@
+{% extends "questions/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<div class="classes" style="display: block; padding-top: 1rem">
+    <div style="display: flex; flex-wrap: wrap;">
+        <div class="card" style="width: 100%; margin-left: 2rem; display: flex; justify-content: space-between;">
+            <span style="font-size: 23px; display: block;">{% blocktrans %}Professor{% endblocktrans %}: {{user.first_name}} {{user.last_name}}</span>
+            <a class="link inactive_btn" onclick="filter('inactive')">{% blocktrans %}Show monitors list{% endblocktrans %}</a>
+            <a class="link active_btn" onclick="filter('active')" style="display: none">{% blocktrans %}Hide monitors list{% endblocktrans %}</a>
+        </div>
+    {% for class in classes %}
+    <div class="card class card_{{class.id}} class_{{class.active}}" style="width: calc(50% - 2rem); margin-left: 2rem; height: 11rem;">
+        <h3 style="margin-bottom: 0.5rem">{{class.name}}</h3>
+        <span class="class_code">{{class.class_code}}</span><br>
+        {% blocktrans %}Students{% endblocktrans %}: {{class.students}}<br>{% blocktrans %}Chapters{% endblocktrans %}: {{class.chapters}}<br>{% blocktrans %}Start date{% endblocktrans %}: {{class.start_date}}
+        <a href="{% url 'class_dashboard' onlineclass=class.id %}" class="link" style="position: absolute; right: 1rem; bottom:4rem">Dashboard</a>
+        <a href="{% url 'manage_class' onlineclass_id=class.id %}"><button class="primary class_btn">{% blocktrans %}Manage class{% endblocktrans %}</button></a>
+        <span class="class_active" id="active_{{class.id}}">
+        <span style="margin-right: 1rem" id="{% if class.active %}active{% else %}inactive{% endif %}">
+            {% if class.active %}
+            <span class="badge success">{% blocktrans %}Active{% endblocktrans %}</span>
+            {% else %}
+            <span class="badge danger">{% blocktrans %}Inactive{% endblocktrans %}</span>
+            {% endif %}
+        </span>
+        <label class="switch">
+            <input type="checkbox" onchange="classToggle('{{class.id}}')" {% if class.active %}checked{% endif %}>
+            <span class="slider round"></span>
+        </label>
+        </span>
+    </div>
+    {% endfor %}
+    <div class="card" style="width: calc(50% - 2rem); margin-left: 2rem; height: 11rem;">
+        <h3>{% blocktrans %}New monitor{% endblocktrans %}</h3>
+        <form method="POST" action="{% url 'monitors' %}" class="edit-profile">
+            {% csrf_token %}
+            {% for error in form.name.errors %}
+            <span style="color: red;">{{ error|escape }}</span><br>
+            {% endfor %}
+            <input type="text" name="name" placeholder="{% blocktrans %}Monitor name{% endblocktrans %}" value="{{form.name.value|default_if_none:''}}"></input>
+            <button type="submit" class="primary" >{% blocktrans %}Add{% endblocktrans %}</button>
+        </form>
+        <form method="DELETE" action="{% url 'monitors' %}" class="edit-profile">
+            {% csrf_token %}
+            {% for error in form.name.errors %}
+            <span style="color: red;">{{ error|escape }}</span><br>
+            {% endfor %}
+            <input type="text" name="name" placeholder="{% blocktrans %}Monitor name{% endblocktrans %}" value="{{form.name.value|default_if_none:''}}"></input>
+            <button type="submit" class="primary" >{% blocktrans %}Remove{% endblocktrans %}</button>
+        </form>
+    </div>
+    </div>
+</div>
+{% endblock %}
+{% block javascript %}
+<script type="text/javascript">
+
+    // Save page access
+    $(document).ready(function() {
+        $.ajax({
+            type: "POST",
+            url: '{% url "saveaccess" %}',
+            data: {
+                'page': 'Monitors',
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            dataType: 'json',
+            success: function(data){
+            console.log('status: ' + data['status']);
+            },
+            error: function (request, status, error) {
+            console.log(request.status);
+            }
+        });
+    });
+
+    function classToggle(class_id) {
+        $.ajax({
+            url: "{% url 'class_active' %}",
+            type: "POST",
+            data: {'class_id': class_id,
+                   'csrfmiddlewaretoken': '{{ csrf_token }}'}
+        });
+        var active = $('#active_'+class_id+' > span').attr('id');
+        if (active == 'active') {
+            $('#active_'+class_id+' > span').html('<span class="badge danger">{% blocktrans %}Inactive{% endblocktrans %}</span>');
+            $('#active_'+class_id+' > span').attr('id', 'inactive')
+            $('.card_'+class_id).attr('class','card class card_'+class_id+' class_False');
+        } else {
+            $('#active_'+class_id+' > span').html('<span class="badge success">{% blocktrans %}Active{% endblocktrans %}</span>');
+            $('#active_'+class_id+' > span').attr('id', 'active');
+            $('.card_'+class_id).attr('class','card class card_'+class_id+' class_True');
+        }
+    };
+
+    $('.class_False').hide();
+    function filter(status) {
+        if (status == 'inactive') {
+            $('.class_False').show();
+            $('.inactive_btn').hide();
+            $('.active_btn').show();
+        } else {
+            $('.class_False').hide();
+            $('.inactive_btn').show();
+            $('.active_btn').hide();
+        }
+    };
+</script>
+{% endblock %}
