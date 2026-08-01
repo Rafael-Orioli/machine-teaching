@@ -22,7 +22,7 @@
     </div>
     <div class="card">
         <h3>{% blocktrans %}Add chapter{% endblocktrans %}</h3>
-        <form action="{% url 'manage_class' onlineclass=onlineclass.id %}" method="POST">
+        <form action="{% url 'manage_class' onlineclass_id=onlineclass.id %}" method="POST">
             {% csrf_token %}
                 {% for message in form.chapter.errors %}
                 <span id="error">{{ message }}</span></br>
@@ -49,7 +49,39 @@
                 <input type="text" name="time" placeholder="{% blocktrans %}Time (H:M){% endblocktrans %}" required style="width: calc(100% - 1rem); margin-left: 1rem">
                  </div></div></div>
             <div class="col-12" style="margin-top: 1rem; text-align: center;">
-                <button class="primary" type="submit">{% blocktrans %}Add{% endblocktrans %}</button>
+                <button class="primary" type="submit" name="add_chapter">{% blocktrans %}Add{% endblocktrans %}</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>{% blocktrans %}Monitors{% endblocktrans %}</h3>
+        <table>
+            <tr>
+                <td style="padding-left: 1rem; font-weight: 400; width: 50%">{% blocktrans %}Name{% endblocktrans %}</td>
+                <td style="font-weight: 400; text-align: center;">E-mail</td>
+            </tr>
+            {% for monitor in monitors %}
+            <tr class="row">
+                <td>{{monitor.name}}</td>
+                <td style="text-align: center;">{{monitor.email}}</td>
+                <td style="text-align: right;"><a href="{% url 'delete_monitor' onlineclass_id=onlineclass.id monitor_id=monitor.user_id %}" class="link del">{% blocktrans %}Delete{% endblocktrans %}</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="card">
+        <h3>{% blocktrans %}Add monitor{% endblocktrans %}</h3>
+        <form action="{% url 'manage_class' onlineclass_id=onlineclass.id %}" method="POST">
+            {% csrf_token %}
+                <h4>{% blocktrans %}Name{% endblocktrans %}</h4>
+                <select name="select_monitor" required="required" style="width: 100%; margin-bottom: 1rem;">
+                    {% for student in students_candidates %}
+                    <option value="{{ student.id }}"> {{ student.name }} - {{ student.email }}</option>
+                    {% endfor %}
+                </select>
+            <div class="col-12" style="margin-top: 1rem; text-align: center;">
+                <button class="primary" type="submit" name="add_monitor">{% blocktrans %}Add{% endblocktrans %}</button>
             </div>
         </form>
     </div>
