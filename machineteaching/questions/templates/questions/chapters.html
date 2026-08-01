@@ -4,7 +4,7 @@
 {% block content %}
 <div class="col col-4">
 
-    {% if perms.questions.view_userlogview %}
+    {% if perms.questions.add_chapter %} <!--Professor-->
     <!-- new chapter -->
     <div class="card add" style="padding: 0.7rem 1rem">
         <h3>{% blocktrans %}Add chapter{% endblocktrans %}</h3>
