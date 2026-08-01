@@ -23,7 +23,7 @@
 	    			<div class="student">
 	    		        <h1>{{ problems_time.student }} min</h1>
                         <h2>
-                        {% if perms.questions.view_userlogview %}
+                        {% if perms.questions.view_userlogview %} <!--Monitor-->
                         {% blocktrans %}Student{% endblocktrans %}
                         {% else %}
                         {% blocktrans %}You{% endblocktrans %}
@@ -33,7 +33,7 @@
 	    		    <div class="class">
 	    		        <h1>{{ problems_time.class }} min</h1>
 	    		        <h2>
-                        {% if perms.questions.view_userlogview %}
+                        {% if perms.questions.view_userlogview %} <!--Monitor-->
                         {% blocktrans %}Class{% endblocktrans %}
                         {% else %}
                         {% blocktrans %}Your class{% endblocktrans %}
