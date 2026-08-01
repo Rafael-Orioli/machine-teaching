@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (Problem, Solution, TestCase, UserLog, Cluster, UserModel,
-                     UserProfile, Professor, OnlineClass, Chapter, Deadline,
+                     UserProfile, Professor, OnlineClass, Chapter, Deadline, Monitor,
                      ExerciseSet, UserLogError, PageAccess, Interactive, Comment, DropOutModel, Collaborator, ChapterLink)
 from simple_history.admin import SimpleHistoryAdmin
 from import_export.admin import ExportActionMixin
@@ -20,6 +20,30 @@ class SolutionAdmin(SimpleHistoryAdmin):
 class TestCaseAdmin(admin.ModelAdmin):
     list_display = ('problem', 'content')
     autocomplete_fields = ['problem']
+
+@admin.register(Monitor)
+class MonitorAdmin(admin.ModelAdmin):
+    list_display = ('get_usuario_nome', 'get_turma_nome', 'get_tempo_inicio', 'get_tempo_fim')
+
+    # Método para pegar o nome do usuário relacionado
+    def get_usuario_nome(self, obj):
+        return obj.user.first_name + ' ' + obj.user.last_name
+    get_usuario_nome.short_description = 'Nome do Aluno'
+
+    # Método para pegar o nome da turma relacionada
+    def get_turma_nome(self, obj):
+        return obj.online_class.name
+    get_turma_nome.short_description = 'Nome da Turma'
+    
+    # Método para pegar o tempo de início do usuário relacionado
+    def get_tempo_inicio(self, obj):
+        return obj.start_date
+    get_tempo_inicio.short_description = 'Tempo de Início'
+
+    # Método para pegar o tempo de fim do usuário relacionado
+    def get_tempo_fim(self, obj):
+        return obj.end_date
+    get_tempo_fim.short_description = 'Tempo de Fim'
 
 
 @admin.register(UserLog)
