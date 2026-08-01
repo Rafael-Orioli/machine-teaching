@@ -40,15 +40,15 @@
               <a class="menu-item" href="{% url 'next' %}">{% blocktrans %}Current problem{% endblocktrans %}</a>
               <a class="menu-item" href="{% url 'past_problems' %}">{% blocktrans %}Past problems{% endblocktrans %}</a>
               <a class="menu-item" href="{% url 'chapters' %}">{% blocktrans %}Chapters{% endblocktrans %}</a>
-              {% if perms.questions.view_userlogview %}
+              {% if perms.questions.view_userlogview %} <!--Monitor-->
               <a class="menu-item" href="{% url 'classes' %}">{% blocktrans %}Classes{% endblocktrans %}</a>
               {% endif %}
-              <a class="menu-item" href="{% if perms.questions.view_userlogview %}{% url 'show_outcome' %}{% else %}{% url 'dashboard' %}{% endif %}">{% blocktrans %}Outcomes{% endblocktrans %}</a>
+              <a class="menu-item" href="{% if perms.questions.view_userlogview %}{% url 'show_outcome' %}{% else %}{% url 'dashboard' %}{% endif %}">{% blocktrans %}Outcomes{% endblocktrans %}</a> <!--Monitor-->
               {% if SHOW_SATISFACTION_FORM %}
               <a class="menu-item" href="{% url 'satisfaction_form' %}" target="_blank">{% blocktrans %}Satisfaction Form{% endblocktrans %}</a>
               {% endif %}
               {% if not perms.questions.view_userlogview %}
-              <a class="menu-item" onclick="showTutorials('{{language}}')">{% blocktrans %}Tutorials{% endblocktrans %}</a>
+              <a class="menu-item" onclick="showTutorials('{{language}}')">{% blocktrans %}Tutorials{% endblocktrans %}</a> <!--Aluno-->
               {% endif %}
         
             </ul>
@@ -82,11 +82,7 @@
             {% blocktrans %}Hello{% endblocktrans %}, {{ user.first_name }} {{ user.last_name }}
             {% endif %}<span>></span>
             <div class="card dropdown">
-              {% if perms.questions.view_userlogview %}
-              <a class="link" href="{% url 'admin:index' %}" style="height: 2.2rem; margin-bottom: 2rem;">{% blocktrans %}Administration{% endblocktrans %}</a>
-              {% else %}
               <a class="link" href="{% url 'edit_profile' %}" style="height: 2.2rem; margin-bottom: 2rem;">{% blocktrans %}Change class{% endblocktrans %}</a>
-              {% endif %}
               <br>
               <a class="link profile" href="{% url 'profile' %}" style="height: 2.2rem;">{% blocktrans %}Profile{% endblocktrans %}</a>
               <br>
