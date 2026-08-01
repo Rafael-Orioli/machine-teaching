@@ -4,7 +4,7 @@ from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth import login, authenticate
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.messages import success, error
 #from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -21,7 +21,7 @@ import time
 from datetime import datetime
 from statistics import mean
 from questions.models import (Problem, Solution, UserLog, UserProfile,
-                              Professor, OnlineClass, UserLogView, Chapter,
+                              Professor, Monitor, OnlineClass, UserLogView, Chapter,
                               Deadline, ExerciseSet, Recommendations, Comment, Language, TestCase)
 from questions.forms import (UserLogForm, SignUpForm, OutcomeForm, ChapterForm,
                              ProblemForm, SolutionForm, PageAccessForm, InteractiveForm,
@@ -307,7 +307,7 @@ def get_past_problems(request):
     return render(request, 'questions/past_problems.html', {
         'title': _('Past problems'), 'problems': past_problems, 'user': request.user})
 
-@permission_required('questions.view_userlogview', raise_exception=True)
+@permission_required('questions.view_userlogview', raise_exception=True) #Monitor
 @login_required
 def get_student_logs(request, id, chapter=None, problem=None):
     user = User.objects.get(pk=id)
@@ -431,7 +431,7 @@ def show_chapter(request, chapter):
         'failed': failed
         })
 
-@permission_required('questions.view_userlogview', raise_exception=True)
+@permission_required('questions.view_userlogview', raise_exception=True) #Professor
 @login_required
 def new_chapter(request):
     chapter = None
@@ -562,7 +562,7 @@ def get_user_solution(request, id):
     context.update({'log': userlog, 'title': _('Solution'), 'comments': comments, 'form':form})
     return render(request, 'questions/past_solutions.html', context)
 
-@permission_required('questions.view_userlogview', raise_exception=True)
+@permission_required('questions.view_userlogview', raise_exception=True) #Monitor
 def get_problem_solutions(request, problem_id, class_id):
     logs = UserLog.objects.filter(user_class=class_id,
                 problem_id=problem_id).order_by('user__first_name',
@@ -600,7 +600,7 @@ def get_problem_solutions(request, problem_id, class_id):
                                                         'onlineclass': onlineclass,
                                                         'students': students})
 
-@permission_required('questions.view_userlogview', raise_exception=True)
+@permission_required('questions.view_userlogview', raise_exception=True) #Monitor
 def get_student_solutions(request, id, chapter):
     student = User.objects.get(id=id)
     LOGGER.debug("Getting logs for student %s", student)
@@ -644,7 +644,7 @@ def update_strategy(request):
     except Exception:
         return JsonResponse({'status': 'failed'})
 
-@permission_required('questions.view_userlogview', raise_exception=True)
+@permission_required('questions.view_userlogview', raise_exception=True) #Professor
 def export(request):
     response = HttpResponse(content_type='text/csv')
     writer = csv.writer(response)
@@ -687,7 +687,7 @@ def export(request):
     response['Content-Disposition'] = 'attachment; filename="userlog.csv"'
     return response
 
-@permission_required('questions.view_userlogview', raise_exception=True)
+@permission_required('questions.view_userlogview', raise_exception=True) #Professor
 def new_problem(request, chapter=None):
     if request.method == 'POST':
         problem_form = ProblemForm(request.POST)
@@ -767,7 +767,7 @@ def edit_profile(request):
         form = EditProfileForm()
     return render(request, 'questions/edit_profile.html', {'title':_('Edit profile'),'form':form})
 
-@permission_required('questions.view_userlogview', raise_exception=True)
+@permission_required('questions.view_userlogview', raise_exception=True) #Professor
 def classes(request):
     if request.method == 'POST':
         form = NewClassForm(request.POST)
@@ -796,27 +796,49 @@ def classes(request):
                                                       'form': form,
                                                       'classes': classes})
 
-@permission_required('questions.view_userlogview', raise_exception=True)
-def manage_class(request, onlineclass):
+@permission_required('questions.view_userlogview', raise_exception=True) #Professor
+def manage_class(request, onlineclass_id):
     if request.method == "POST":
-        form = DeadlineForm(request.POST)
-        if form.is_valid():
-            chapter = form.cleaned_data['chapter']
-            date = form.cleaned_data['date']
-            time = form.cleaned_data['time']
-            deadline = Deadline(chapter=chapter, deadline=date+' '+time+':59')
-            deadline.save()
-            onlineclass = OnlineClass.objects.get(id=onlineclass)
-            deadline.onlineclass.add(onlineclass)
-            deadline.save()
-            return redirect('manage_class', onlineclass=onlineclass.id)
+        if "add_chapter" in request.POST:
+            form = DeadlineForm(request.POST)
+            if form.is_valid():
+                chapter = form.cleaned_data['chapter']
+                date = form.cleaned_data['date']
+                time = form.cleaned_data['time']
+                deadline = Deadline(chapter=chapter, deadline=date+' '+time+':59')
+                deadline.save()
+                onlineclass = OnlineClass.objects.get(id=onlineclass_id)
+                deadline.onlineclass.add(onlineclass)
+                deadline.save()
+                return redirect('manage_class', onlineclass_id=onlineclass.id)
+        elif "add_monitor" in request.POST:
+            #form = MonitorForm(request.POST)
+            print(request.POST)
+            #if form.is_valid():
+            if 'select_monitor' in request.POST:
+                usuario_id = request.POST.get('select_monitor')
+                print(usuario_id)
+            if not usuario_id:
+                print("not usuario id")
+                return redirect('manage_class', onlineclass_id=onlineclass.id)
+            usuario = User.objects.get(id=usuario_id)
+            onlineclass = OnlineClass.objects.get(id=onlineclass_id)
+            professors = Professor.objects.all().values_list('user')
+            active_monitors = Monitor.objects.filter(online_class=onlineclass, end_date__isnull=True).values_list('user')
+            students = User.objects.filter(userprofile__user_class=onlineclass).exclude(
+            pk__in=professors).exclude(pk__in=active_monitors).order_by(Lower('first_name').asc(), Lower('last_name').asc())
+            if usuario in students:
+                print("usuario.id in students")
+                add_monitor(request, onlineclass_id, usuario_id)
+            return redirect('manage_class', onlineclass_id=onlineclass.id)
     else:
         form = DeadlineForm()
-    onlineclass = OnlineClass.objects.get(id=onlineclass)
+    onlineclass = OnlineClass.objects.get(id=onlineclass_id)
     if onlineclass in Professor.objects.get(user=request.user).prof_class.all():
         professors = Professor.objects.all().values_list('user')
+        active_monitors = Monitor.objects.filter(online_class=onlineclass, end_date__isnull=True).values_list('user')
         students = User.objects.filter(userprofile__user_class=onlineclass).exclude(
-            pk__in=professors).order_by(Lower('first_name').asc(), Lower('last_name').asc())
+            pk__in=professors).exclude(pk__in=active_monitors).order_by(Lower('first_name').asc(), Lower('last_name').asc())
         students_list = []
         for student in students:
             # Temporary hack. TODO: use most updated dropout model
@@ -830,16 +852,81 @@ def manage_class(request, onlineclass):
         for deadline in deadlines:
             chapter = Chapter.objects.get(deadline=deadline)
             chapters.append({'chapter':chapter, 'deadline':deadline})
+        
+        # Monitor
+        monitors_temp = Monitor.objects.filter(online_class = onlineclass, end_date__isnull=True).order_by('user__first_name', 'user__last_name').values('id', 'user__id', 'user__first_name', 'user__last_name', 'user__email')
+        class_monitors = [{'id': monitor['id'], 'user_id': monitor['user__id'], 'name': f"{monitor['user__first_name']} {monitor['user__last_name']}".strip(), 'email': monitor['user__email']} for monitor in monitors_temp]
+        monitors_ids = Monitor.objects.filter(online_class = onlineclass, end_date__isnull=True).values('user__id')
+        students_temp = User.objects.filter(userprofile__user_class=onlineclass).exclude(pk__in = monitors_ids).exclude(pk__in=professors).order_by('first_name', 'last_name').values('id', 'first_name', 'last_name', 'email')
+        students_candidates = [{'id': student['id'], 'name': f"{student['first_name']} {student['last_name']}".strip(), 'email': student['email']} for student in students_temp]
+            
         return render(request, 'questions/show_class.html', {'title': onlineclass.name,
                                                             'students_list': students_list,
                                                             'chapters': chapters,
                                                             'onlineclass': onlineclass,
-                                                            'form': form})
+                                                            'form': form,
+                                                            'monitors':class_monitors,
+                                                            'students_candidates':students_candidates})
     else:
         raise PermissionDenied()
 
 @login_required
-@permission_required('questions.view_userlogview', raise_exception=True)
+def add_monitor(request, onlineclass_id, monitor_id):
+    try:
+        print("Teste add_monitor 1")
+        onlineclass = OnlineClass.objects.get(id=onlineclass_id)
+        user_monitor = User.objects.get(id=monitor_id)
+        print("Teste add_monitor 2")
+        monitor = Monitor.objects.create(online_class=onlineclass, user=user_monitor)
+        print("Teste add_monitor 3")
+        monitor.start_date = timezone.now()
+        monitor.save()
+        print("Teste add_monitor 4")
+        try:
+            print("Teste add_monitor 5")
+            grupo = Group.objects.get(name='Monitor')
+            print("Teste add_monitor 6")
+            user_monitor.groups.add(grupo)
+            print("Teste add_monitor 7")
+            user_monitor.save()
+            print("Grupo de monitor adicionado")
+        except Group.DoesNotExist:
+            pass
+        print("Monitor adicionado")
+    except:
+        print("Erro ao adicionar monitor")
+    return redirect('manage_class', onlineclass_id=onlineclass_id)
+
+@login_required
+def delete_monitor(request, onlineclass_id, monitor_id):
+    try:
+        print("Teste delete_monitor 1")
+        onlineclass = OnlineClass.objects.get(id=onlineclass_id)
+        user_monitor = User.objects.get(id=monitor_id)
+        print("Teste delete_monitor 2")
+        monitors = Monitor.objects.filter(online_class=onlineclass, user=user_monitor, end_date__isnull=True)
+        print("Teste delete_monitor 3")
+        for monitor in monitors:
+            monitor.end_date = timezone.now()
+            monitor.save()
+        print("Teste delete_monitor 4")
+        try:
+            print("Teste delete_monitor 5")
+            grupo = Group.objects.get(name='Monitor')
+            print("Teste delete_monitor 6")
+            user_monitor.groups.remove(grupo)
+            print("Teste delete_monitor 7")
+            user_monitor.save()
+            print("Grupo de monitor removido")
+        except Group.DoesNotExist:
+            pass
+        print("Monitor removido")
+    except:
+        print("Erro ao remover monitor")
+    return redirect('manage_class', onlineclass_id=onlineclass_id)
+
+@login_required
+@permission_required('questions.view_userlogview', raise_exception=True) #Monitor
 def get_class_dashboard(request, onlineclass):
     onlineclass = OnlineClass.objects.get(id=onlineclass)
     if onlineclass in Professor.objects.get(user=request.user).prof_class.all():
@@ -848,7 +935,7 @@ def get_class_dashboard(request, onlineclass):
         raise PermissionDenied()
     
 @login_required
-@permission_required('questions.view_userlogview', raise_exception=True)
+@permission_required('questions.view_userlogview', raise_exception=True) #Monitor
 def get_class_dashboard1(request, onlineclass):
     onlineclass = OnlineClass.objects.get(id=onlineclass)
     if onlineclass in Professor.objects.get(user=request.user).prof_class.all():
@@ -863,7 +950,7 @@ def get_manager_dashboard(request):
 @login_required
 def delete_deadline(request, onlineclass, deadline):
     Deadline.objects.filter(id=deadline).delete()
-    return redirect('manage_class', onlineclass=onlineclass)
+    return redirect('manage_class', onlineclass_id=onlineclass)
 
 def class_active(request):
     if request.method == 'POST':
@@ -885,17 +972,18 @@ def get_dashboard1(request):
     context = get_dashboards(request.user.id)
     return render(request, 'questions/student_dashboard1.html', context)
 
-@permission_required('questions.view_userlogview', raise_exception=True)
+@permission_required('questions.view_userlogview', raise_exception=True) #Monitor
 def get_student_dashboard1(request, id):
     context = get_dashboards(id, professor=True)
     return render(request, 'questions/student_dashboard1.html', context)
 
-@permission_required('questions.view_userlogview', raise_exception=True)
+@permission_required('questions.view_userlogview', raise_exception=True) #Monitor
 def get_student_dashboard(request, id):
     student = User.objects.get(id=id)
     context = student_dashboard(student, professor=True)
     context.update({'student': student})
     return render(request, 'questions/student_dashboard.html', context)
+
 
 @login_required
 def start(request):
